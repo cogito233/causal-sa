@@ -130,19 +130,79 @@ def calculate_sentiment_distribution(path, output_name):
     saveToCSV_overall(result_list, output_name)
     #return sentiment_first_half, sentiment_last_half
 
+def calculate_sentiment_list(path, output_name):
+    df = pd.read_csv(path)
+    review_id = 0
+    review_star = df.iloc[0]["review_stars"]
+    result_list = []
+    sentiment_list = []
+    from tqdm import trange
+    for idx in trange(len(df)):
+        item = df.iloc[idx]
+        if review_id != item["review_id"]:
+            # save new review
+            #first_half, last_half = calculate_sentiment(sentiment_list)
+            review_dict = {
+                "review_id": review_id,
+                "sentiment_list": sentiment_list,
+                "review_stars": review_star
+            }
+            result_list.append(review_dict)
+            # new review
+            review_id = item["review_id"]
+            review_star = item["review_stars"]
+            sentiment_list = []
+        sentiment_list.append(calculate_sentiment_score(item["label"], item["score"]))
+    # the last review
+    review_dict = {
+        "review_id": review_id,
+        "sentiment_list": sentiment_list,
+        "review_stars": review_star
+    }
+    result_list.append(review_dict)
+
+    #from build_graph import saveToCSV_overall
+    #saveToCSV_overall(result_list, output_name)
+    np.save(output_name, np.array(result_list))
+
 def print_distribution_crossID(path_sentiment_distribution, idx_list = None, center_list = None):
+
+    def calculate_sentiment(sentiment_list, center_idx):
+        # input is a list of sentiment
+        # output is a tuple of (first_half, last_half)
+        # delete the center_idx
+        if center_idx != None:
+            sentiment_list = sentiment_list
+            center_idx = int(center_idx*(len(sentiment_list)-1))
+            #print("##########################################")
+            print(center_idx, len(sentiment_list))
+            print(sentiment_list)
+            center = sentiment_list[center_idx]
+            sentiment_list = sentiment_list[:center_idx] + sentiment_list[center_idx+1:]
+        sentiment_list = sentiment_list[1:-1]
+        if len(sentiment_list) % 2 == 1:
+            mid1, mid2 = len(sentiment_list)//2+1, len(sentiment_list)//2
+        else:
+            mid1, mid2 = len(sentiment_list)//2, len(sentiment_list)//2
+        first_half = np.mean(sentiment_list[:mid1])
+        last_half = np.mean(sentiment_list[mid2:])
+        overall = np.mean(sentiment_list)
+        if center_idx == None:
+            return first_half, last_half, overall, None, None
+        random = np.random.choice(sentiment_list)
+        return first_half, last_half, overall, random, center
+
     # if idx_list is None, print the distribution of all idx
-    df = pd.read_csv(path_sentiment_distribution)
+    result_list = np.load(path_sentiment_distribution, allow_pickle=True)
+    print(result_list[0])
     # Translate df to a dict with review_id->(first_half, last_half)
     dict_review_id = {}
-    for idx in range(len(df)):
-        item = df.iloc[idx]
+    for idx in range(len(result_list)):
+        item = result_list[idx]
         review_id = item["review_id"]
         if review_id not in dict_review_id:
             dict_review_id[review_id] = {
-                "first_half": item["sentiment_first_half"],
-                "last_half": item["sentiment_last_half"],
-                "overall": item["sentiment_overall"],
+                "sentiment_list": item["sentiment_list"],
                 "review_stars": item["review_stars"]
             }
         else:
@@ -154,21 +214,26 @@ def print_distribution_crossID(path_sentiment_distribution, idx_list = None, cen
         "first_half": [],
         "last_half": [],
         "overall": [],
+        "random": [],
+        "center": [],
         "sentiment_label": []
     }
     for i in range(len(idx_list)):
         idx = idx_list[i]
-        center = center_list[i]
+        center = center_list[i] if center_list is not None else None
         if idx not in dict_review_id:
             continue
         item = dict_review_id[idx]
-        print(item)
-        exit(0)
+        #print(item)
+        #exit(0)
         if item['review_stars'] == 2:
             continue
-        result_dict["first_half"].append(item["first_half"])
-        result_dict["last_half"].append(item["last_half"])
-        result_dict["overall"].append(item["overall"])
+        first_half, last_half, overall, random, center = calculate_sentiment(item["sentiment_list"], center)
+        result_dict["first_half"].append(first_half)
+        result_dict["last_half"].append(last_half)
+        result_dict["overall"].append(overall)
+        result_dict["random"].append(random)
+        result_dict["center"].append(center)
         result_dict["sentiment_label"].append(1 if item["review_stars"] > 2 else -1)
 
     # Calculate the correlation of first_half and sentiment_label
@@ -177,6 +242,10 @@ def print_distribution_crossID(path_sentiment_distribution, idx_list = None, cen
     print("first_half and sentiment_label: ", pearsonr(result_dict["first_half"], result_dict["sentiment_label"]))
     print("last_half and sentiment_label: ", pearsonr(result_dict["last_half"], result_dict["sentiment_label"]))
     print("overall and sentiment_label: ", pearsonr(result_dict["overall"], result_dict["sentiment_label"]))
+    if center_list is not None:
+        print("random and sentiment_label: ", pearsonr(result_dict["random"], result_dict["sentiment_label"]))
+        print("center and sentiment_label: ", pearsonr(result_dict["center"], result_dict["sentiment_label"]))
+
 
 
 
@@ -192,6 +261,7 @@ if __name__ == "__main__":
     #print(idx)
     #print(len(subsampling_similarity(path_diagonal, path_overall)))
     #calculate_sentiment_distribution("yelp_sentiment_score_newSentence.csv", "sentiment_distribution")
+    
     path_sentiment = "analyze_data/sentiment_distribution.csv"
 
     #df = pd.read_csv(path_sentiment)
@@ -200,12 +270,19 @@ if __name__ == "__main__":
     print_distribution_crossID(path_sentiment, idx)
     print_distribution_crossID(path_sentiment, all_idx)
     """
-    path_sentiment = "analyze_data/sentiment_distribution.csv"
+    #calculate_sentiment_list("yelp_sentiment_score_newSentence.csv", "sentiment_list")
 
+    path_sentiment = "sentiment_list.npy"
     idx = np.load("analyze_data/star_list.npy").tolist()
     center_idx = np.load("analyze_data/center_list.npy").tolist()
     print(len(idx))
     print_distribution_crossID(path_sentiment, idx, center_idx)
+
+    path_diagonal = "analyze_data/similarity_diagonal_test.csv"
+    path_overall = "analyze_data/similarity_matrix_test.csv"
+    idx, all_idx = subsampling_similarity(path_diagonal, path_overall)
+    print_distribution_crossID(path_sentiment, idx)
+    print_distribution_crossID(path_sentiment, all_idx)
 
 
 
