@@ -179,7 +179,7 @@ def print_distribution_crossID(path_sentiment_distribution, idx_list = None, cen
             print(sentiment_list)
             center = sentiment_list[center_idx]
             sentiment_list = sentiment_list[:center_idx] + sentiment_list[center_idx+1:]
-        sentiment_list = sentiment_list[1:-1]
+        #sentiment_list = sentiment_list[1:-1]
         if len(sentiment_list) % 2 == 1:
             mid1, mid2 = len(sentiment_list)//2+1, len(sentiment_list)//2
         else:
@@ -242,6 +242,14 @@ def print_distribution_crossID(path_sentiment_distribution, idx_list = None, cen
     print("first_half and sentiment_label: ", pearsonr(result_dict["first_half"], result_dict["sentiment_label"]))
     print("last_half and sentiment_label: ", pearsonr(result_dict["last_half"], result_dict["sentiment_label"]))
     print("overall and sentiment_label: ", pearsonr(result_dict["overall"], result_dict["sentiment_label"]))
+    # Calculate regression of first_half, last_half and sentiment_label
+    X = np.array([result_dict["first_half"], result_dict["last_half"]]).T
+    y = np.array(result_dict["sentiment_label"])
+    from sklearn.linear_model import LinearRegression
+    reg = LinearRegression().fit(X, y)
+    print("regression of first_half and last_half: ", reg.coef_)
+    print("regression intercept_ of first_half and last_half: ", reg.intercept_)
+
     if center_list is not None:
         print("random and sentiment_label: ", pearsonr(result_dict["random"], result_dict["sentiment_label"]))
         print("center and sentiment_label: ", pearsonr(result_dict["center"], result_dict["sentiment_label"]))
