@@ -4,6 +4,7 @@ from scipy.spatial.distance import cosine
 import pickle
 
 model = SentenceTransformer('all-MiniLM-L6-v2')
+# TODO: 算一下不同similarity的分布
 
 import torch
 from transformers import AutoTokenizer, AutoModel

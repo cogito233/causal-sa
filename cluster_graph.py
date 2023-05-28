@@ -72,8 +72,8 @@ def is_star(edge_list, n):
         if count_dict[i] > (n+1)/2:
             #print(edge_list)
             #exit(0)
-            return True
-    return False
+            return True, i/(n-1) # Return the center of the star
+    return False, -1
 
 def load_similarity_list(df):
     # df: review_id, similarity, label, idx1, idx2
@@ -115,20 +115,25 @@ def load_similarity_list(df):
     count_stream = 0
     count_star = 0
     count_both = 0
+    star_list = []
+    center_list = []
     from tqdm import trange
     for i in trange(len(review_meta_list)):
         review_meta_list[i]['is_stream'] = is_stream(review_meta_list[i]['edge_list'], len(review_meta_list[i]['sentence_list']))
-        review_meta_list[i]['is_star'] = is_star(review_meta_list[i]['edge_list'], len(review_meta_list[i]['sentence_list']))
+        review_meta_list[i]['is_star'], center = is_star(review_meta_list[i]['edge_list'], len(review_meta_list[i]['sentence_list']))
         if review_meta_list[i]['is_stream']:
             count_stream += 1
         if review_meta_list[i]['is_star']:
             count_star += 1
-            print(review_meta_list[i]['edge_list'])
-            print(review_meta_list[i]['sentence_list'])
-            if i>=1000:
-                break
+            star_list.append(review_meta_list[i]['review_id'])
+            center_list.append(center)
         if review_meta_list[i]['is_stream'] and review_meta_list[i]['is_star']:
             count_both += 1
+    print(star_list[:10])
+    print(center_list[:10])
+    save_to_npy(star_list, "analyze_data/star_list.npy")
+    save_to_npy(center_list, "analyze_data/center_list.npy")
+
     print("count_stream: ", count_stream)
     print("count_star: ", count_star)
     print("count_both: ", count_both)

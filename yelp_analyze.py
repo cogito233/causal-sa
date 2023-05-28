@@ -130,7 +130,7 @@ def calculate_sentiment_distribution(path, output_name):
     saveToCSV_overall(result_list, output_name)
     #return sentiment_first_half, sentiment_last_half
 
-def print_distribution_crossID(path_sentiment_distribution, idx_list = None):
+def print_distribution_crossID(path_sentiment_distribution, idx_list = None, center_list = None):
     # if idx_list is None, print the distribution of all idx
     df = pd.read_csv(path_sentiment_distribution)
     # Translate df to a dict with review_id->(first_half, last_half)
@@ -156,10 +156,14 @@ def print_distribution_crossID(path_sentiment_distribution, idx_list = None):
         "overall": [],
         "sentiment_label": []
     }
-    for idx in idx_list:
+    for i in range(len(idx_list)):
+        idx = idx_list[i]
+        center = center_list[i]
         if idx not in dict_review_id:
             continue
         item = dict_review_id[idx]
+        print(item)
+        exit(0)
         if item['review_stars'] == 2:
             continue
         result_dict["first_half"].append(item["first_half"])
@@ -177,6 +181,7 @@ def print_distribution_crossID(path_sentiment_distribution, idx_list = None):
 
 
 if __name__ == "__main__":
+    """
     path_diagonal = "analyze_data/similarity_diagonal_test.csv"
     path_overall = "analyze_data/similarity_matrix_test.csv"
     # analyze_similarity(path_diagonal)
@@ -188,11 +193,20 @@ if __name__ == "__main__":
     #print(len(subsampling_similarity(path_diagonal, path_overall)))
     #calculate_sentiment_distribution("yelp_sentiment_score_newSentence.csv", "sentiment_distribution")
     path_sentiment = "analyze_data/sentiment_distribution.csv"
+
     #df = pd.read_csv(path_sentiment)
     #print(df[:10])
     #print(len(df))
     print_distribution_crossID(path_sentiment, idx)
     print_distribution_crossID(path_sentiment, all_idx)
+    """
+    path_sentiment = "analyze_data/sentiment_distribution.csv"
+
+    idx = np.load("analyze_data/star_list.npy").tolist()
+    center_idx = np.load("analyze_data/center_list.npy").tolist()
+    print(len(idx))
+    print_distribution_crossID(path_sentiment, idx, center_idx)
+
 
 
 
