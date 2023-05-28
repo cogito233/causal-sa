@@ -8,4 +8,4 @@ def load_sample_point(review_id):
     return dataset[review_id]
 
 if __name__ == "__main__":
-    load_sample_point(233)
+    load_sample_point(1321)

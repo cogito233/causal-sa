@@ -137,12 +137,12 @@ if __name__ == '__main__':
     from yelp_split import load_yelp
     dataset = load_yelp()
 
-    # train_dataset = dataset['train']
-    test_dataset = dataset['test']
+    train_dataset = dataset['train']
+    #test_dataset = dataset['test']
     similarity_diagnoal_list, similarity_matrix_list = [], []
     num = 0
     from tqdm import tqdm
-    for review in tqdm(test_dataset):
+    for review in tqdm(train_dataset):
         #if num==10:
         #    break
         similarity_diagonal, similarity_matrix = calculate_similarity_matrix(review['text'], review['label'], num)
@@ -151,6 +151,6 @@ if __name__ == '__main__':
         similarity_matrix_list += similarity_matrix
     #print(len(similarity_diagnoal_list))
     #print(len(similarity_matrix_list))
-    saveToCSV_overall(similarity_diagnoal_list, 'similarity_diagonal_test')
-    saveToCSV_overall(similarity_matrix_list, 'similarity_matrix_test')
+    saveToCSV_overall(similarity_diagnoal_list, 'similarity_diagonal_train')
+    saveToCSV_overall(similarity_matrix_list, 'similarity_matrix_train')
     # save the similarity matrix

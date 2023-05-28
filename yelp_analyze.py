@@ -12,6 +12,8 @@ def analyze_similarity(path):
 
 def subsampling_similarity(path_diagonal, path_overall):
     # Return is a list of idx, with is seems to be type 1
+    #filename = "idx_list_another_0.05"
+    filename = "idx_list"
     def check_type1(similarity_diagonal, similarity_overall):
         # input is two list of similarity
         # output is a boolean, whether it is type 1
@@ -19,14 +21,16 @@ def subsampling_similarity(path_diagonal, path_overall):
             return False
         ave_diagonal = np.mean(similarity_diagonal)
         ave_overall = np.mean(similarity_overall)
-        if ave_diagonal > ave_overall+0.05:
+        if ave_diagonal+0.05 < ave_overall:
             return True
         else:
             return False
     # load idx list from idx_list.npy
     import os
-    if os.path.exists("analyze_data/idx_list.npy"):
-        return np.load("analyze_data/idx_list.npy").tolist(), np.load("analyze_data/all_valid_idx.npy").tolist()
+    if os.path.exists(f"analyze_data/{filename}.npy"):
+        return np.load(f"analyze_data/{filename}.npy").tolist(), np.load("analyze_data/all_valid_idx.npy").tolist()
+    #if os.path.exists("analyze_data/idx_list.npy"):
+    #    return np.load("analyze_data/idx_list.npy").tolist(), np.load("analyze_data/all_valid_idx.npy").tolist()
 
     df_diagonal = pd.read_csv(path_diagonal)
     df_overall = pd.read_csv(path_overall)
@@ -53,6 +57,8 @@ def subsampling_similarity(path_diagonal, path_overall):
             list_overall = []
             list_diagonal = []
         list_diagonal.append(item["similarity"])
+        if idx_diagonal == 10000:
+            break
     # the last review
     while df_overall.iloc[idx_overall]["review_id"] == review_id:
         list_overall.append(df_overall.iloc[idx_overall]["similarity"])
@@ -64,8 +70,8 @@ def subsampling_similarity(path_diagonal, path_overall):
     all_valid_idx.append(review_id)
 
     # save idx_list
-    np.save("analyze_data/idx_list.npy", np.array(idx_list))
-    np.save("analyze_data/all_valid_idx.npy", np.array(all_valid_idx))
+    np.save(f"analyze_data/{filename}.npy", np.array(idx_list))
+    #np.save("analyze_data/all_valid_idx.npy", np.array(all_valid_idx))
     return idx_list, all_valid_idx
 
 def calculate_sentiment_score(label, score):
@@ -163,6 +169,7 @@ def print_distribution_crossID(path_sentiment_distribution, idx_list = None):
 
     # Calculate the correlation of first_half and sentiment_label
     from scipy.stats import pearsonr
+    print(len(result_dict["first_half"]))
     print("first_half and sentiment_label: ", pearsonr(result_dict["first_half"], result_dict["sentiment_label"]))
     print("last_half and sentiment_label: ", pearsonr(result_dict["last_half"], result_dict["sentiment_label"]))
     print("overall and sentiment_label: ", pearsonr(result_dict["overall"], result_dict["sentiment_label"]))
@@ -177,14 +184,15 @@ if __name__ == "__main__":
     idx, all_idx = subsampling_similarity(path_diagonal, path_overall)
     print(len(idx))
     print(len(all_idx))
+    #print(idx)
     #print(len(subsampling_similarity(path_diagonal, path_overall)))
     #calculate_sentiment_distribution("yelp_sentiment_score_newSentence.csv", "sentiment_distribution")
-    #path_sentiment = "analyze_data/sentiment_distribution.csv"
+    path_sentiment = "analyze_data/sentiment_distribution.csv"
     #df = pd.read_csv(path_sentiment)
     #print(df[:10])
     #print(len(df))
-    #print_distribution_crossID(path_sentiment, idx)
-    #print_distribution_crossID(path_sentiment, all_idx)
+    print_distribution_crossID(path_sentiment, idx)
+    print_distribution_crossID(path_sentiment, all_idx)
 
 
 
