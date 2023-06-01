@@ -130,7 +130,8 @@ def saveToCSV_overall(outline_list, name):
             result_dict[key].append(outline[key])
     df = DataFrame(result_dict)
     #df = df.sort_values(by=['similarity'], ascending=True)
-    path = "analyze_data/" + name + ".csv"
+    path = "reformated_data/" + name + ".csv"
+    print("Saving to ", path)
     df.to_csv(path, index=False)
     return df
 

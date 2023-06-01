@@ -102,7 +102,7 @@ if __name__ == '__main__':
     # parser = argparse.ArgumentParser()
     # parser.add_argument('--save_path', type=str, default='./yelp_sentiment_score.csv')
     # args = parser.parse_args()
-    save_sentiment_score("./yelp_sentiment_score_newSentence.csv")
+    #save_sentiment_score("./yelp_sentiment_score_newSentence.csv")
 
-    #dataset = load_yelp()['test']
+    dataset = load_yelp()['test']
     #print_datapoint(dataset, 13813)

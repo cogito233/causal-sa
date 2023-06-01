@@ -75,12 +75,15 @@ def is_star(edge_list, n):
             return True, i/(n-1) # Return the center of the star
     return False, -1
 
-def load_similarity_list(df):
+def load_similarity_list():
     # df: review_id, similarity, label, idx1, idx2
     # for each review, build a graph,
     # return a list of dict, {"review_id": review_id, "edge_list": edge_list, "avg_similarity": avg_similarity}
     from yelp_split import load_yelp, custom_sentence_tokenize
     data = load_yelp()['test']
+    path = "/home/yangk/zhiheng/develop_codeversion/causal-prompt/analyze_data/similarity_matrix_test.csv"
+    df = pd.read_csv(path)
+
     import os
     if os.path.exists("analyze_data/review_meta_list.npy"):
         review_meta_list = load_from_npy("analyze_data/review_meta_list.npy")
@@ -109,9 +112,12 @@ def load_similarity_list(df):
             edge_list = buildSpanningTree_fromMatrix(similarity_matrix, length)
             review_dict['edge_list'] = edge_list
             review_dict['sentence_list'] = sentences
+            review_dict['similarity_matrix'] = similarity_matrix
             review_meta_list.append(review_dict)
         save_to_npy(review_meta_list, "analyze_data/review_meta_list.npy")
     print("Finish loading similarity list!")
+    return review_meta_list
+    """
     count_stream = 0
     count_star = 0
     count_both = 0
@@ -137,7 +143,7 @@ def load_similarity_list(df):
     print("count_stream: ", count_stream)
     print("count_star: ", count_star)
     print("count_both: ", count_both)
-
+    """
 
 def save_sentence_list():
     from yelp_split import load_yelp, custom_sentence_tokenize
@@ -159,17 +165,82 @@ def save_sentence_list():
     from build_graph import saveToCSV_overall
     saveToCSV_overall(result_list, "sentence_list_test")
 
+def calc_type1Score(): # -> review_discourse_type1.csv; return a list of dict
+    def type1Score(review_meta):
+        n = len(review_meta['sentence_list'])
+        edge_list = review_meta['edge_list']
+        total_MST_weight = 0
+        for edge in edge_list:
+            total_MST_weight += edge[0]
+        total_chain_weight = 0
+        for i in range(n-1):
+            total_chain_weight += review_meta['similarity_matrix'][i, i+1]
+        return total_chain_weight/total_MST_weight
+    review_meta_list = load_similarity_list()
+    output_path = "analyze_data/review_discourse_type1.npy"
+    import os
+    if os.path.exists(output_path):
+        result_list = load_from_npy(output_path)
+    else:
+        result_list = []
+        for review_meta in review_meta_list:
+            result_list.append({
+                "review_id": review_meta['review_id'],
+                "score_type1": type1Score(review_meta)
+            })
+        save_to_npy(result_list, output_path)
+    count = 0
+    for result in result_list:
+        if result['score_type1'] > 0.9:
+            count += 1
+    print("Type1 count: ", count)
+    return result_list
+def calc_type2Score(): # -> review_discourse_type2.csv return a list of dict
+    def type2Score(review_meta):
+        score = 0
+        count_dict = {}
+        edge_list = review_meta['edge_list']
+        n = len(review_meta['sentence_list'])
+        for i in range(n):
+            count_dict[i] = 0
+        for i in range(len(edge_list)):
+            count_dict[edge_list[i][1]] += 1
+            count_dict[edge_list[i][2]] += 1
+        for i in count_dict:
+            score = max(score, count_dict[i]+1)
+        return score/n
+
+    review_meta_list = load_similarity_list()
+    output_path = "analyze_data/review_discourse_type2.npy"
+    import os
+    if os.path.exists(output_path):
+        result_list = load_from_npy(output_path)
+    else:
+        result_list = []
+        for review_meta in review_meta_list:
+            result_list.append({
+                "review_id": review_meta['review_id'],
+                "score_type2": type2Score(review_meta)
+            })
+        save_to_npy(result_list, output_path)
+    count = 0
+    for result in result_list:
+        if result['score_type2'] > 0.6:
+            count += 1
+    print("Type2 count: ", count)
+    return result_list
+
+def merge_type1_type2(type1_list, type2_list): # -> review_discourse.csv
+    from build_graph import saveToCSV_overall
+    for i in range(len(type1_list)):
+        type1_list[i]['score_type2'] = type2_list[i]['score_type2']
+    saveToCSV_overall(type1_list, "review_discourse")
 
 if __name__ == '__main__':
-    path = "/home/yangk/zhiheng/develop_codeversion/causal-prompt/analyze_data/similarity_matrix_test.csv"
-    df = pd.read_csv(path)
-    #print(df[0:20])
-    load_similarity_list(df)
-    #save_sentence_list()
-    #path = "/home/yangk/zhiheng/develop_codeversion/causal-prompt/analyze_data/sentence_list_test.csv"
-    #df_sentence = pd.read_csv(path)
-    #print(df_sentence[:10])
-    pass
+    type1_score = calc_type1Score()
+    type2_score = calc_type2Score()
+    merge_type1_type2(type1_score, type2_score)
+
 # Step 1: Test Save and Load npy
 # Step 2: Test build_graph and visualize graph?
 # Step 3: Test is_connect, is_stream, is_star
