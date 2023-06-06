@@ -197,18 +197,21 @@ def calc_type1Score(): # -> review_discourse_type1.csv; return a list of dict
     return result_list
 def calc_type2Score(): # -> review_discourse_type2.csv return a list of dict
     def type2Score(review_meta):
-        score = 0
-        count_dict = {}
-        edge_list = review_meta['edge_list']
         n = len(review_meta['sentence_list'])
+        edge_list = review_meta['edge_list']
+        total_MST_weight = 0
+        for edge in edge_list:
+            total_MST_weight += edge[0]
+        maximum_star_weight = 0
         for i in range(n):
-            count_dict[i] = 0
-        for i in range(len(edge_list)):
-            count_dict[edge_list[i][1]] += 1
-            count_dict[edge_list[i][2]] += 1
-        for i in count_dict:
-            score = max(score, count_dict[i]+1)
-        return score/n
+            star_weight = 0
+            for j in range(n):
+                if i == j:
+                    continue
+                star_weight += review_meta['similarity_matrix'][i, j]
+            if star_weight > maximum_star_weight:
+                maximum_star_weight = star_weight
+        return maximum_star_weight/total_MST_weight
 
     review_meta_list = load_similarity_list()
     output_path = "analyze_data/review_discourse_type2.npy"
@@ -236,10 +239,28 @@ def merge_type1_type2(type1_list, type2_list): # -> review_discourse.csv
         type1_list[i]['score_type2'] = type2_list[i]['score_type2']
     saveToCSV_overall(type1_list, "review_discourse")
 
+# MST Graph
+def export_graph():
+    review_meta_list = load_similarity_list()
+    print(review_meta_list[0])
+    result_list = [] # {"review_id": int, "sentence_id1": int, "sentence_id2": int, "weight": float}
+    for review_meta in review_meta_list:
+        for edge in review_meta['edge_list']:
+            result_list.append({
+                "review_id": review_meta['review_id'],
+                "sentence_id1": edge[1],
+                "sentence_id2": edge[2],
+                "weight": edge[0]
+            })
+    from build_graph import saveToCSV_overall
+    saveToCSV_overall(result_list, "yelp_MST_graph")
+
+
 if __name__ == '__main__':
-    type1_score = calc_type1Score()
-    type2_score = calc_type2Score()
-    merge_type1_type2(type1_score, type2_score)
+    #type1_score = calc_type1Score()
+    #type2_score = calc_type2Score()
+    #merge_type1_type2(type1_score, type2_score)
+    export_graph()
 
 # Step 1: Test Save and Load npy
 # Step 2: Test build_graph and visualize graph?
