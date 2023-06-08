@@ -204,6 +204,8 @@ def calc_type2Score(): # -> review_discourse_type2.csv return a list of dict
             total_MST_weight += edge[0]
         maximum_star_weight = 0
         for i in range(n):
+            if i > 1:
+                break
             star_weight = 0
             for j in range(n):
                 if i == j:
@@ -214,7 +216,7 @@ def calc_type2Score(): # -> review_discourse_type2.csv return a list of dict
         return maximum_star_weight/total_MST_weight
 
     review_meta_list = load_similarity_list()
-    output_path = "analyze_data/review_discourse_type2.npy"
+    output_path = "analyze_data/review_discourse_type2_newType2.npy"
     import os
     if os.path.exists(output_path):
         result_list = load_from_npy(output_path)
@@ -237,9 +239,9 @@ def merge_type1_type2(type1_list, type2_list): # -> review_discourse.csv
     from build_graph import saveToCSV_overall
     for i in range(len(type1_list)):
         type1_list[i]['score_type2'] = type2_list[i]['score_type2']
-    saveToCSV_overall(type1_list, "review_discourse")
+    saveToCSV_overall(type1_list, "yelp_discourse_newType2")
 
-# MST Graph
+# export MST Graph to visualize on colab
 def export_graph():
     review_meta_list = load_similarity_list()
     print(review_meta_list[0])
@@ -257,10 +259,10 @@ def export_graph():
 
 
 if __name__ == '__main__':
-    #type1_score = calc_type1Score()
-    #type2_score = calc_type2Score()
-    #merge_type1_type2(type1_score, type2_score)
-    export_graph()
+    type1_score = calc_type1Score()
+    type2_score = calc_type2Score()
+    merge_type1_type2(type1_score, type2_score)
+    # export_graph()
 
 # Step 1: Test Save and Load npy
 # Step 2: Test build_graph and visualize graph?

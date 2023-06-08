@@ -21,4 +21,4 @@ if __name__ == "__main__":
     #print(len(a)+len(b)-len(compare_union_set(a,b)))
     #print(len(a))
     #print(len(b))
-    load_sample_point(3551)
+    load_sample_point(7796)
