@@ -59,27 +59,58 @@ def custom_sentence_tokenize(text):
         sentences.append(curr_sentence[1:])
     return sentences
 
-
 # Calculate sentiment score for each sentence and save to file
 def save_sentiment_score(save_path):
     from transformers import pipeline
-    sentiment_pipeline = pipeline("sentiment-analysis", device = 0)# model = 'cardiffnlp/twitter-roberta-base-sentiment-latest', tokenizer = 'cardiffnlp/twitter-roberta-base-sentiment-latest')
-    df_dict = {'sentence':[], 'score':[], 'label':[], 'review_id':[], 'review_stars':[]}
+    tokenizer = transformers.AutoTokenizer.from_pretrained('distilbert-base-uncased-finetuned-sst-2-english', max_length=512)
+
+    def cut_sentence(sentence):
+        # use the tokenizer to cut the sentence to maximum length
+        # if the sentence is too long, only keep the last 512 tokens
+        # return the sentence and whether it is cut
+        encoded_input = tokenizer.encode(sentence)
+        #print(len(encoded_input))
+        if len(encoded_input) > 500:
+            #print(tokenizer.decode(encoded_input[-510:]))
+            return tokenizer.decode(encoded_input[-500:]), True
+        else:
+            return sentence, False
+
+    sentiment_pipeline = pipeline("sentiment-analysis", device = 0)
+                                  #)# model = 'cardiffnlp/twitter-roberta-base-sentiment-latest', tokenizer = 'cardiffnlp/twitter-roberta-base-sentiment-latest')
+    df_dict = {'sentence':[], 'score':[], 'label':[], 'review_id':[], 'review_stars':[], "cuted":[]}
+
     dataset = load_yelp()['test']
     for i in tqdm(range(len(dataset))):
         review = dataset[i]
         #sentences = split2sentences(review['text'])
-        sentences = custom_sentence_tokenize(review['text'])
+        from yelp_subsample import split_to_sentences
+        sentences = split_to_sentences(review['text'])
+        try:
+            text, cuted = cut_sentence(review['text'])
+            result = sentiment_pipeline(text)
+        except:
+            print(s)
+            exit(0)
+        df_dict['sentence'].append(review['text'])
+        df_dict['score'].append(result[0]['score'])
+        df_dict['label'].append(result[0]['label'])
+        df_dict['review_id'].append(i)
+        df_dict['review_stars'].append(review['label'] + 1)
+        df_dict['cuted'].append(cuted)
         for s in sentences:
             try:
-                result = sentiment_pipeline(s)
+                text, cuted = cut_sentence(s)
+                result = sentiment_pipeline(text)
             except:
-                continue
+                print(s)
+                exit(0)
             df_dict['sentence'].append(s)
             df_dict['score'].append(result[0]['score'])
             df_dict['label'].append(result[0]['label'])
             df_dict['review_id'].append(i)
             df_dict['review_stars'].append(review['label']+1)
+            df_dict['cuted'].append(cuted)
     df = pd.DataFrame(df_dict)
     df.to_csv(save_path, index=False)
     return df
@@ -102,7 +133,7 @@ if __name__ == '__main__':
     # parser = argparse.ArgumentParser()
     # parser.add_argument('--save_path', type=str, default='./yelp_sentiment_score.csv')
     # args = parser.parse_args()
-    #save_sentiment_score("./yelp_sentiment_score_newSentence.csv")
+    save_sentiment_score("./yelp_sentiment_score_0609.csv")
 
-    dataset = load_yelp()['test']
+    #dataset = load_yelp()['test']
     #print_datapoint(dataset, 13813)

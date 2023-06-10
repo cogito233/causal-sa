@@ -12,7 +12,7 @@ def split_to_sentences(string):
     string = nlper.sent_tokenize(string)
     return string
 
-def filter_by_sentences(yelp_test):
+def filter_by_sentences(yelp_test, output_name = "yelp_test"):
     result_list = []
     from tqdm import trange
     for i in trange(len(yelp_test)):
@@ -27,18 +27,16 @@ def filter_by_sentences(yelp_test):
     # Then random shuffle
     np.random.shuffle(result_list)
     print(len(result_list))
-    saveToCSV_overall(result_list, 'yelp_id_text_label')
+    saveToCSV_overall(result_list, output_name)
     return result_list
 
 
 if __name__ == '__main__':
     from yelp_split import load_yelp
+    yelp = load_yelp()['train']
+    yelp = filter_by_sentences(yelp, output_name = "yelp_train")
+
     yelp_test = load_yelp()['test']
-    path = "/home/yangk/zhiheng/develop_codeversion/causal-prompt/reformated_data/yelp_id_text_label.csv"
-    from pandas import read_csv
-    df = read_csv(path)
-    print(df.head())
-    yelp_test = filter_by_sentences(yelp_test)
-    df = read_csv(path)
-    print(df.head())
+    yelp_test = filter_by_sentences(yelp_test, output_name = "yelp_test")
+
 
