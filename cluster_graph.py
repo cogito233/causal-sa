@@ -79,9 +79,10 @@ def load_similarity_list():
     # df: review_id, similarity, label, idx1, idx2
     # for each review, build a graph,
     # return a list of dict, {"review_id": review_id, "edge_list": edge_list, "avg_similarity": avg_similarity}
-    from yelp_split import load_yelp, custom_sentence_tokenize
+    from yelp_split import load_yelp
+    from yelp_subsample import split_to_sentences
     data = load_yelp()['test']
-    path = "/home/yangk/zhiheng/develop_codeversion/causal-prompt/analyze_data/similarity_matrix_test.csv"
+    path = "/home/yangk/zhiheng/develop_codeversion/causal-prompt/reformated_data/similarity_matrix_test_0609.csv"
     df = pd.read_csv(path)
 
     import os
@@ -93,9 +94,9 @@ def load_similarity_list():
         review_meta_list = []
         for i in trange(len(data)):
             review_dict = {"review_id": i, "edge_list": []}
-            sentences = custom_sentence_tokenize(data[i]['text'])
+            sentences = split_to_sentences(data[i]['text'])
             length = len(sentences)
-            if length<=5:
+            if length <= 5:
                 continue
             similarity_matrix = np.zeros((length, length))-10
             # change the type of similarity_matrix to float
@@ -146,13 +147,14 @@ def load_similarity_list():
     """
 
 def save_sentence_list():
-    from yelp_split import load_yelp, custom_sentence_tokenize
+    from yelp_split import load_yelp
+    from yelp_subsample import split_to_sentences
     data = load_yelp()['test']
 
     result_list = []
     from tqdm import trange
     for i in trange(len(data)):
-        sentences = custom_sentence_tokenize(data[i]['text'])
+        sentences = split_to_sentences(data[i]['text'])
         idx = 0
         for sentence in sentences:
             result_list.append({
@@ -255,7 +257,7 @@ def export_graph():
                 "weight": edge[0]
             })
     from build_graph import saveToCSV_overall
-    saveToCSV_overall(result_list, "yelp_MST_graph")
+    saveToCSV_overall(result_list, "yelp_MST_graph_0609")
 
 
 if __name__ == '__main__':

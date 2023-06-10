@@ -29,10 +29,11 @@ def reformat_Yelp():
     saveToCSV_overall(result_list, 'yelp_doc_senti_true')
 # Done: Yelp Sentence(yelp_sent_senti_pred.csv): (review_id, sentence_id, sentence_text, sentence_sentiment)
 def reformat_Yelp_sentence_sentiment():
-    df_sentiment = pd.read_csv('yelp_sentiment_score_newSentence.csv')
-    review_id = 0
+    df_sentiment = pd.read_csv('yelp_sentiment_score_0609.csv')
+    review_id = -1
     sentence_id = 0
     result_list = []
+    result_list_ReviewPred = []
     from tqdm import trange
     for i in trange(len(df_sentiment)):
         item = df_sentiment.iloc[i]
@@ -41,15 +42,25 @@ def reformat_Yelp_sentence_sentiment():
         if item['review_id'] != review_id:
             review_id = item['review_id']
             sentence_id = 0
+            result = {
+                'review_id': item['review_id'],
+                #'sentence_id': sentence_id,
+                'review_text': item['sentence'],
+                'review_sentiment': score,
+                'cut_flag': item['cuted']
+            }
+            result_list_ReviewPred.append(result)
         result = {
             'review_id': item['review_id'],
             'sentence_id': sentence_id,
             'sentence_text': item['sentence'],
-            'sentence_sentiment': score
+            'sentence_sentiment': score,
+            'cut_flag': item['cuted']
         }
-        sentence_id += 1
         result_list.append(result)
-    saveToCSV_overall(result_list, 'yelp_sent_senti_pred')
+        sentence_id += 1
+    saveToCSV_overall(result_list, 'yelp_sent_senti_pred_0609')
+    saveToCSV_overall(result_list_ReviewPred, 'yelp_senti_pred_0609')
 
 # TODO: Yelp Analyze(yelp_sent_sentiment_tmp.csv): (review_id, peak_end_avg, all_sent_avg)
 def reformat_Yelp_analyze():
@@ -59,8 +70,8 @@ def reformat_Yelp_analyze():
             # abs value of i
             if abs(i) > abs(peak):
                 peak = i
-        return (peak + end) / 2
-    df = pd.read_csv('reformated_data/yelp_sent_senti_pred.csv')
+        return (peak + end) / 2, peak, end
+    df = pd.read_csv('reformated_data/yelp_sent_senti_pred_0609.csv')
     import math
     review_id = 0
     result_list = []
@@ -69,25 +80,31 @@ def reformat_Yelp_analyze():
         item = df.iloc[i]
         if item['review_id'] != review_id:
             if len(senti_list) > 0:
-                peak_end_avg = calc_peak_end_avg(senti_list)
+                peak_end_avg, peak, end = calc_peak_end_avg(senti_list)
                 all_sent_avg = sum(senti_list) / len(senti_list)
                 result_list.append({
                     'review_id': review_id,
                     'peak_end_avg': peak_end_avg,
-                    'all_sent_avg': all_sent_avg
+                    'all_sent_avg': all_sent_avg,
+                    'peak': peak,
+                    'begin': senti_list[0],
+                    'end': end
                 })
             review_id = item['review_id']
             senti_list = []
         senti_list.append(item['sentence_sentiment'])
     if len(senti_list) > 0:
-        peak_end_avg = calc_peak_end_avg(senti_list)
+        peak_end_avg, peak, end = calc_peak_end_avg(senti_list)
         all_sent_avg = sum(senti_list) / len(senti_list)
         result_list.append({
             'review_id': review_id,
             'peak_end_avg': peak_end_avg,
-            'all_sent_avg': all_sent_avg
+            'all_sent_avg': all_sent_avg,
+            'peak': peak,
+            'begin': senti_list[0],
+            'end': end
         })
-    saveToCSV_overall(result_list, 'yelp_sent_sentiment_tmp')
+    saveToCSV_overall(result_list, 'yelp_sent_sentiment_tmp_0609')
 
 # TODO: yelp_doc_senti_pred.csv(review_id, pred_score, pred_label)
 # TODO: Sentiment model is not work?
@@ -119,14 +136,18 @@ def reformat_Yelp_doc_sentiment():
         result_list.append(result)
     saveToCSV_overall(result_list, 'yelp_doc_senti_pred')
 
+
 if __name__ == '__main__':
     #df = pd.read_csv('yelp_sentiment_score_newSentence.csv')
     #print(df.head())
     #reformat_Yelp_sentence_sentiment()
-    #df = pd.read_csv('reformated_data/yelp_sent_senti_pred.csv')
-    #print(df.head())
+    #df = pd.read_csv('reformated_data/yelp_sent_senti_pred_0609.csv')
+    #print(len(df))
+    #df = pd.read_csv('reformated_data/yelp_senti_pred_0609.csv')
+    #print(len(df))
+    #print(df[:10])
     #print(df.tail())
     #reformat_Yelp_analyze()
-    df = pd.read_csv('reformated_data/yelp_sent_sentiment_tmp.csv')
+    df = pd.read_csv('reformated_data/yelp_sent_sentiment_tmp_0609.csv')
     print(df.head())
     print(df.tail())

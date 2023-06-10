@@ -80,7 +80,8 @@ def custom_sentence_tokenize(text):
 
 def calculate_similarity_matrix(review, label, idx):
     # Return a list of diagonal similarity and a list of similarity matrix
-    sentences_raw = custom_sentence_tokenize(review)
+    from yelp_subsample import split_to_sentences
+    sentences_raw = split_to_sentences(review)
     # Concat the sentences that is not long enough
     sentences = []
     curr_sentence = ''
@@ -153,6 +154,6 @@ if __name__ == '__main__':
         similarity_matrix_list += similarity_matrix
     #print(len(similarity_diagnoal_list))
     #print(len(similarity_matrix_list))
-    saveToCSV_overall(similarity_diagnoal_list, 'similarity_diagonal_test_bert')
-    saveToCSV_overall(similarity_matrix_list, 'similarity_matrix_test_bert')
+    saveToCSV_overall(similarity_diagnoal_list, 'similarity_diagonal_test_0609')
+    saveToCSV_overall(similarity_matrix_list, 'similarity_matrix_test_0609')
     # save the similarity matrix
