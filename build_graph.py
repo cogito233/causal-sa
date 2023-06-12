@@ -81,21 +81,7 @@ def custom_sentence_tokenize(text):
 def calculate_similarity_matrix(review, label, idx):
     # Return a list of diagonal similarity and a list of similarity matrix
     from yelp_subsample import split_to_sentences
-    sentences_raw = split_to_sentences(review)
-    # Concat the sentences that is not long enough
-    sentences = []
-    curr_sentence = ''
-    curr_length = 0
-    # if the length of the sentence is less than 10, concat the sentence
-    for i in range(len(sentences_raw)):
-        curr_sentence = curr_sentence + ' ' + sentences_raw[i]
-        curr_length = calculate_sentence_length(curr_sentence)
-        if curr_length > 10:
-            sentences.append(curr_sentence[1:])
-            curr_sentence = ''
-            curr_length = 0
-    if curr_length > 0:
-        sentences.append(curr_sentence[1:])
+    sentences = split_to_sentences(review)
     if len(sentences) < 5: # filter the review that is too short
         return [], []
     # Calculate the similarity matrix

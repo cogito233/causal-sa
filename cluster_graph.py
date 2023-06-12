@@ -84,9 +84,11 @@ def load_similarity_list():
     data = load_yelp()['test']
     path = "/home/yangk/zhiheng/develop_codeversion/causal-prompt/reformated_data/similarity_matrix_test_0609.csv"
     df = pd.read_csv(path)
+    #print(df.head())
+    #exit(0)
 
     import os
-    if os.path.exists("analyze_data/review_meta_list.npy"):
+    if os.path.exists("analyze_data/review_meta_list.npyy"):
         review_meta_list = load_from_npy("analyze_data/review_meta_list.npy")
         pass
     else:
@@ -96,8 +98,10 @@ def load_similarity_list():
             review_dict = {"review_id": i, "edge_list": []}
             sentences = split_to_sentences(data[i]['text'])
             length = len(sentences)
-            if length <= 5:
+            if length < 5:
                 continue
+            #print(sentences)
+            #print(length)
             similarity_matrix = np.zeros((length, length))-10
             # change the type of similarity_matrix to float
             similarity_matrix = similarity_matrix.astype(np.float)
@@ -117,6 +121,7 @@ def load_similarity_list():
             review_meta_list.append(review_dict)
         save_to_npy(review_meta_list, "analyze_data/review_meta_list.npy")
     print("Finish loading similarity list!")
+    print("The length of review_meta_list is: ", len(review_meta_list))
     return review_meta_list
     """
     count_stream = 0
@@ -218,7 +223,7 @@ def calc_type2Score(): # -> review_discourse_type2.csv return a list of dict
         return maximum_star_weight/total_MST_weight
 
     review_meta_list = load_similarity_list()
-    output_path = "analyze_data/review_discourse_type2_newType2.npy"
+    output_path = "analyze_data/review_discourse_type2.npy"
     import os
     if os.path.exists(output_path):
         result_list = load_from_npy(output_path)
@@ -241,7 +246,8 @@ def merge_type1_type2(type1_list, type2_list): # -> review_discourse.csv
     from build_graph import saveToCSV_overall
     for i in range(len(type1_list)):
         type1_list[i]['score_type2'] = type2_list[i]['score_type2']
-    saveToCSV_overall(type1_list, "yelp_discourse_newType2")
+    print(len(type1_list))
+    saveToCSV_overall(type1_list, "yelp_discourse_0609")
 
 # export MST Graph to visualize on colab
 def export_graph():
@@ -263,8 +269,9 @@ def export_graph():
 if __name__ == '__main__':
     type1_score = calc_type1Score()
     type2_score = calc_type2Score()
+    print("len(type1_score): ", len(type1_score))
     merge_type1_type2(type1_score, type2_score)
-    # export_graph()
+    #export_graph()
 
 # Step 1: Test Save and Load npy
 # Step 2: Test build_graph and visualize graph?
