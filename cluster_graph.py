@@ -81,10 +81,10 @@ def load_similarity_list():
     # return a list of dict, {"review_id": review_id, "edge_list": edge_list, "avg_similarity": avg_similarity}
     from yelp_split import load_yelp
     from yelp_subsample import split_to_sentences
-    data = load_yelp()['test']
-    path = "/home/yangk/zhiheng/develop_codeversion/causal-prompt/reformated_data/similarity_matrix_test_0609.csv"
+    data = pd.read_csv("/home/yangk/zhiheng/develop_codeversion/causal-prompt/reformated_data/amazon_doc_senti_true.csv")
+    path = "/home/yangk/zhiheng/develop_codeversion/causal-prompt/reformated_data/amazon_similarity_matrix_test.csv"
     df = pd.read_csv(path)
-    #print(df.head())
+    print(df.head())
     #exit(0)
 
     import os
@@ -96,9 +96,10 @@ def load_similarity_list():
         review_meta_list = []
         for i in trange(len(data)):
             review_dict = {"review_id": i, "edge_list": []}
-            sentences = split_to_sentences(data[i]['text'])
+            sentences = split_to_sentences(data.iloc[i]['review_text'])
             length = len(sentences)
             if length < 5:
+                raise Exception("length < 5")
                 continue
             #print(sentences)
             #print(length)
@@ -118,6 +119,11 @@ def load_similarity_list():
             review_dict['edge_list'] = edge_list
             review_dict['sentence_list'] = sentences
             review_dict['similarity_matrix'] = similarity_matrix
+            #print(len(sub_df))
+            #print(sub_df.head())
+            #print(edge_list)
+            #print(similarity_matrix)
+            #exit(0)
             review_meta_list.append(review_dict)
         save_to_npy(review_meta_list, "analyze_data/review_meta_list.npy")
     print("Finish loading similarity list!")
@@ -186,7 +192,7 @@ def calc_type1Score(): # -> review_discourse_type1.csv; return a list of dict
     review_meta_list = load_similarity_list()
     output_path = "analyze_data/review_discourse_type1.npy"
     import os
-    if os.path.exists(output_path):
+    if os.path.exists(output_path) and False:
         result_list = load_from_npy(output_path)
     else:
         result_list = []
@@ -225,7 +231,7 @@ def calc_type2Score(): # -> review_discourse_type2.csv return a list of dict
     review_meta_list = load_similarity_list()
     output_path = "analyze_data/review_discourse_type2.npy"
     import os
-    if os.path.exists(output_path):
+    if os.path.exists(output_path) and False:
         result_list = load_from_npy(output_path)
     else:
         result_list = []
@@ -247,7 +253,7 @@ def merge_type1_type2(type1_list, type2_list): # -> review_discourse.csv
     for i in range(len(type1_list)):
         type1_list[i]['score_type2'] = type2_list[i]['score_type2']
     print(len(type1_list))
-    saveToCSV_overall(type1_list, "yelp_discourse_0609")
+    saveToCSV_overall(type1_list, "amazon_discourse")
 
 # export MST Graph to visualize on colab
 def export_graph():

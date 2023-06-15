@@ -4,9 +4,11 @@ def load_sample_point(review_id):
     from yelp_split import load_yelp
     dataset = load_yelp()['test']
     from yelp_split import custom_sentence_tokenize
-    for i in custom_sentence_tokenize(dataset[review_id]['text']):
+    from yelp_subsample import split_to_sentences
+    for i in split_to_sentences(dataset[review_id]['text']):
         print(i)
-    return custom_sentence_tokenize(dataset[review_id]['text'])
+    print(dataset[review_id]['label'])
+    return split_to_sentences(dataset[review_id]['text'])
 
 def compare_union_set(list1, list2):
     set1 = set(list1)
@@ -21,4 +23,4 @@ if __name__ == "__main__":
     #print(len(a)+len(b)-len(compare_union_set(a,b)))
     #print(len(a))
     #print(len(b))
-    load_sample_point(43774)
+    load_sample_point(29906)

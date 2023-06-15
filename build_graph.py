@@ -82,7 +82,10 @@ def calculate_similarity_matrix(review, label, idx):
     # Return a list of diagonal similarity and a list of similarity matrix
     from yelp_subsample import split_to_sentences
     sentences = split_to_sentences(review)
+    print(sentences)
     if len(sentences) < 5: # filter the review that is too short
+        print(sentences)
+        raise ValueError("The review is too short")
         return [], []
     # Calculate the similarity matrix
     sentences_embedding = []
@@ -123,23 +126,28 @@ def saveToCSV_overall(outline_list, name):
     return df
 
 if __name__ == '__main__':
-    from yelp_split import load_yelp
-    dataset = load_yelp()
+    #from yelp_split import load_yelp
+    #dataset = load_yelp()
 
     #train_dataset = dataset['train']
-    test_dataset = dataset['test']
+    #test_dataset = dataset['test']
+    test_dataset = pd.read_csv("/home/yangk/zhiheng/develop_codeversion/causal-prompt/reformated_data/amazon_doc_senti_true.csv")
     similarity_diagnoal_list, similarity_matrix_list = [], []
     num = 0
-    from tqdm import tqdm
-    for review in tqdm(test_dataset):
+    from tqdm import trange
+    for i in trange(len(test_dataset)):
         #if num==10:
         #    break
-        similarity_diagonal, similarity_matrix = calculate_similarity_matrix(review['text'], review['label'], num)
+        review = test_dataset.iloc[i].to_dict()
+        similarity_diagonal, similarity_matrix = calculate_similarity_matrix(review['review_text'], review['stars'], num)
         num += 1
         similarity_diagnoal_list += similarity_diagonal
         similarity_matrix_list += similarity_matrix
+        print(similarity_diagonal)
+        print(similarity_matrix)
+        exit(0)
     #print(len(similarity_diagnoal_list))
     #print(len(similarity_matrix_list))
-    saveToCSV_overall(similarity_diagnoal_list, 'similarity_diagonal_test_0609')
-    saveToCSV_overall(similarity_matrix_list, 'similarity_matrix_test_0609')
+    saveToCSV_overall(similarity_diagnoal_list, 'amazon_similarity_diagonal_test')
+    saveToCSV_overall(similarity_matrix_list, 'amazon_similarity_matrix_test')
     # save the similarity matrix
