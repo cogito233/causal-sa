@@ -4,7 +4,6 @@ from scipy.spatial.distance import cosine
 import pickle
 
 model = SentenceTransformer('all-MiniLM-L6-v2')
-# TODO: 算一下不同similarity的分布
 
 import torch
 from transformers import AutoTokenizer, AutoModel
@@ -55,7 +54,6 @@ import re
 from nltk.tokenize import sent_tokenize
 
 from transformers import GPT2Tokenizer
-# 加载GPT-2的tokenizer
 tokenizer_gpt = GPT2Tokenizer.from_pretrained('gpt2')
 tokenizer_gpt.pad_token = tokenizer.eos_token
 
@@ -67,10 +65,8 @@ def calculate_sentence_length(sentence):
 
 
 def custom_sentence_tokenize(text):
-    # 根据句号分割句子
     sentences = re.split(r'(?<!\w\.\w.)(?<![A-Z][a-z]\.)(?<=\.|\?|\!)\s', text)
 
-    # 进一步根据逗号分割句子
     final_sentences = []
     for sentence in sentences:
         comma_split = re.split(r'(?<!\w\.\w.)(?<![A-Z][a-z]\.)(?<=;)\s', sentence)
