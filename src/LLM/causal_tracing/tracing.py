@@ -348,9 +348,16 @@ def plot_all_flow(mt, prompt, subject=None, noise=0.1, modelname=None):
         )
 
 tokenizer = LlamaTokenizer.from_pretrained("/path/to/llama")
+model = LlamaForCausalLM.from_pretrained("/path/to/llama",device_map="auto",torch_dtype=torch.float16,load_in_8bit=True)
+model.eval()
+## deativate gradient calculation
+for param in model.parameters():
+    param.requires_grad = False
+
 model_name = "/path/to/llama" # or "EleutherAI/gpt-j-6B" or "EleutherAI/gpt-neox-20b"
 mt = ModelAndTokenizer(
-    model_name,
+    model=model,
+    tokenizer=tokenizer,
     low_cpu_mem_usage=False,
     torch_dtype=(torch.float16 if (("20b" in model_name) or ("llama" in model_name)) else None),
 )
@@ -370,15 +377,12 @@ for i in range(0,yelp.shape[0],1):
         for elem in llama:
             review=yelp['text'].values[i]
             prompt=prompt_groups[elem[0]][elem[1]]
-            #prompts=prompt.format(review)
             prompts=prompt.format(review).strip()+" "
             str_rep='"{}"'.format(review)
-            #str_rep=prompts
             inputs = tokenizer(prompts, return_tensors='pt').to(device)
             if inputs['input_ids'].shape[1]>2048:
                 print(inputs['input_ids'].shape[1])
                 continue
-#            try:
             dict_res={}
             dict_res['review_id']=yelp['review_id'].values[i]
             dict_res['prompt_type']=elem[0]
@@ -393,9 +397,6 @@ for i in range(0,yelp.shape[0],1):
                     l_name="res"
                 dict_res[l_name] =result
             outputs_final.append(dict_res)
-#            except Exception as e:
-#                print(e)
-#                continue
             with open('./psy_res/2lay_trace_llama7b.pkl', 'wb') as file:
                 pickle.dump(outputs_final, file)
         print("DONE",i)
