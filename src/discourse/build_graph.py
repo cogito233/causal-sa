@@ -58,27 +58,27 @@ tokenizer_gpt = GPT2Tokenizer.from_pretrained('gpt2')
 tokenizer_gpt.pad_token = tokenizer.eos_token
 
 
-def calculate_sentence_length(sentence):
-    # Return the length of the sentence
-    encoded_input = tokenizer_gpt.encode(sentence)
-    return len(encoded_input)
-
-
-def custom_sentence_tokenize(text):
-    sentences = re.split(r'(?<!\w\.\w.)(?<![A-Z][a-z]\.)(?<=\.|\?|\!)\s', text)
-
-    final_sentences = []
-    for sentence in sentences:
-        comma_split = re.split(r'(?<!\w\.\w.)(?<![A-Z][a-z]\.)(?<=;)\s', sentence)
-        final_sentences.extend(comma_split)
-
-    return final_sentences
+# def calculate_sentence_length(sentence):
+#     # Return the length of the sentence
+#     encoded_input = tokenizer_gpt.encode(sentence)
+#     return len(encoded_input)
+#
+#
+# def custom_sentence_tokenize(text):
+#     sentences = re.split(r'(?<!\w\.\w.)(?<![A-Z][a-z]\.)(?<=\.|\?|\!)\s', text)
+#
+#     final_sentences = []
+#     for sentence in sentences:
+#         comma_split = re.split(r'(?<!\w\.\w.)(?<![A-Z][a-z]\.)(?<=;)\s', sentence)
+#         final_sentences.extend(comma_split)
+#
+#     return final_sentences
 
 def calculate_similarity_matrix(review, label, idx):
     # Return a list of diagonal similarity and a list of similarity matrix
     from yelp_subsample import split_to_sentences
     sentences = split_to_sentences(review)
-    print(sentences)
+    # print(sentences)
     if len(sentences) < 5: # filter the review that is too short
         print(sentences)
         raise ValueError("The review is too short")

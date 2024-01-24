@@ -5,8 +5,9 @@ from __future__ import unicode_literals, print_function
 class NLP:
     def __init__(self, disable=['ner', 'parser', 'tagger', "lemmatizer"]):
         import spacy
-
-        self.nlp = spacy.load('en_core_web_sm', disable=disable)
+        import en_core_web_sm
+        # nlp = en_core_web_sm.load()
+        self.nlp = en_core_web_sm.load()
         try:
             self.nlp.add_pipe(self.nlp.create_pipe('sentencizer'))
         except:
